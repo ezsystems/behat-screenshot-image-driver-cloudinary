@@ -1,7 +1,7 @@
 ImageDriver-Cloudinary for Behat-ScreenshotExtension
 =========================
 
-[![Build Status](https://travis-ci.org/ezsystems/behat-screenshot-image-driver-cloudinary.svg?branch=master)](https://travis-ci.org/mnocon/behat-screenshot-image-driver-cloudinary)
+[![Build Status](https://travis-ci.org/ezsystems/behat-screenshot-image-driver-cloudinary.svg?branch=master)](https://travis-ci.org/ezsystems/behat-screenshot-image-driver-cloudinary)
 
 This package is an image driver for the [bex/behat-screenshot](https://github.com/elvetemedve/behat-screenshot) behat extension which can upload the screenshot to [Cloudinary](http://cloudinary.com) and print the url of the uploaded image.
 
