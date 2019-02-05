@@ -8,6 +8,7 @@ namespace spec\Bex\Behat\ScreenshotExtension\Driver;
 use Bex\Behat\ScreenshotExtension\Driver\CloudinaryClient\CloudinaryClient;
 use Bex\Behat\ScreenshotExtension\Driver\Local;
 use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class CloudinarySpec extends ObjectBehavior
@@ -24,9 +25,9 @@ class CloudinarySpec extends ObjectBehavior
 
     public function it_should_call_the_unsigned_api_with_the_correct_data(ContainerBuilder $container, Local $local, CloudinaryClient $client)
     {
-        $this->load($container, ['screenshot_directory' => '/tmp/behat-screenshot/', 'cloud_name' => 'X', 'preset' => 'Y']);
+        $this->load($container, ['screenshot_directory' => '/tmp/behat-screenshot/', 'cloud_name' => 'X', 'preset' => 'Y', 'mode' => 'normal', 'limit' => -1]);
 
-        $local->upload('imgdata', 'img_file_name.png')->shouldBeCalled()->willReturn('/tmp/behat-screenshot/img_file_name.png');
+        $local->upload('imgdata', Argument::containingString('img_file_name.png'))->shouldBeCalled()->willReturn('/tmp/behat-screenshot/img_file_name.png');
         $client->uploadUnsigned('/tmp/behat-screenshot/img_file_name.png')->shouldBeCalled()->willReturn(['success' => true, 'secure_url' => 'cloudinary']);
 
         $this->upload('imgdata', 'img_file_name.png')->shouldReturn('cloudinary');
@@ -34,9 +35,9 @@ class CloudinarySpec extends ObjectBehavior
 
     public function it_should_call_the_signed_api_with_the_correct_data(ContainerBuilder $container, Local $local, CloudinaryClient $client)
     {
-        $this->load($container, ['screenshot_directory' => '/tmp/behat-screenshot/']);
+        $this->load($container, ['screenshot_directory' => '/tmp/behat-screenshot/', 'mode' => 'normal', 'limit' => -1]);
 
-        $local->upload('imgdata', 'img_file_name.png')->shouldBeCalled()->willReturn('/tmp/behat-screenshot/img_file_name.png');
+        $local->upload('imgdata', Argument::containingString('img_file_name.png'))->shouldBeCalled()->willReturn('/tmp/behat-screenshot/img_file_name.png');
         $client->upload('/tmp/behat-screenshot/img_file_name.png')->shouldBeCalled()->willReturn(['success' => true, 'secure_url' => 'cloudinary']);
 
         $this->upload('imgdata', 'img_file_name.png')->shouldReturn('cloudinary');

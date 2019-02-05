@@ -7,6 +7,10 @@ namespace Bex\Behat\ScreenshotExtension\Driver;
 
 use Bex\Behat\ScreenshotExtension\Driver\CloudinaryClient\CloudinaryClient;
 use Bex\Behat\ScreenshotExtension\Driver\CloudinaryClient\CloudinaryClientInterface;
+use Bex\Behat\ScreenshotExtension\Driver\Constraint\CiConstraint;
+use Bex\Behat\ScreenshotExtension\Driver\Constraint\Constraint;
+use Bex\Behat\ScreenshotExtension\Driver\Constraint\ConstraintList;
+use Bex\Behat\ScreenshotExtension\Driver\Constraint\LimitConstraint;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -14,6 +18,8 @@ class Cloudinary implements ImageDriverInterface
 {
     const CONFIG_PARAM_PRESET = 'preset';
     const CONFIG_PARAM_CLOUD_NAME = 'cloud_name';
+    const CONFIG_PARAM_MODE = 'mode';
+    const CONFIG_PARAM_LIMIT = 'limit';
 
     /** @var CloudinaryClientInterface */
     private $cloudinaryClient;
@@ -23,6 +29,11 @@ class Cloudinary implements ImageDriverInterface
 
     /** @var bool */
     private $isUnsignedUpload;
+
+    /** @var Constraint[] */
+    private $constraints;
+
+    private $screenshotDirectory;
 
     public function __construct(ImageDriverInterface $localDriver = null, CloudinaryClientInterface $cloudinaryClient = null)
     {
@@ -38,6 +49,12 @@ class Cloudinary implements ImageDriverInterface
      */
     public function upload($binaryImage, $filename)
     {
+        $filename = $this->randomizeFilename($filename);
+
+        if (!$this->constraints->canUpload()) {
+            return $this->constraints->getReason();
+        }
+
         $filepath = $this->localDriver->upload($binaryImage, $filename);
 
         if ($this->isUnsignedUpload) {
@@ -57,15 +74,31 @@ class Cloudinary implements ImageDriverInterface
             ->children()
                 ->variableNode(self::CONFIG_PARAM_CLOUD_NAME)->end()
                 ->variableNode(self::CONFIG_PARAM_PRESET)->end()
+                ->scalarNode('mode')->defaultValue('normal')->end()
+                ->integerNode('limit')->defaultValue(-1)->end()
+                ->end()
             ->end();
     }
 
     public function load(ContainerBuilder $container, array $config)
     {
         $this->localDriver->load($container, $config);
+        $this->screenshotDirectory = str_replace(
+            '%paths.base%',
+            $container->getParameter('paths.base'),
+            $config[Local::CONFIG_PARAM_SCREENSHOT_DIRECTORY]
+        );
+
+        $this->constraints = new ConstraintList();
+        if (CiConstraint::MODE_NAME === $config[SELF::CONFIG_PARAM_MODE]) {
+            $this->constraints->add(new CiConstraint());
+        }
+
+        if ($config[SELF::CONFIG_PARAM_LIMIT] >= 0) {
+            $this->constraints->add(new LimitConstraint($config[SELF::CONFIG_PARAM_LIMIT], $this->screenshotDirectory));
+        }
 
         $this->isUnsignedUpload = array_key_exists(self::CONFIG_PARAM_PRESET, $config);
-
         if ($this->isUnsignedUpload) {
             $this->cloudinaryClient->configure([CloudinaryClient::CLOUD_NAME_KEY => $config[self::CONFIG_PARAM_CLOUD_NAME], CloudinaryClient::PRESET_KEY => $config[self::CONFIG_PARAM_PRESET]]);
         }
@@ -81,5 +114,10 @@ class Cloudinary implements ImageDriverInterface
     private function processResponse($response)
     {
         return $response['success'] ? $response['secure_url'] : sprintf('Failure: %s', $response['failureReason']);
+    }
+
+    private function randomizeFilename($filename)
+    {
+        return sprintf('%s-%s', str_replace('.', '', uniqid('', true)), $filename);
     }
 }
