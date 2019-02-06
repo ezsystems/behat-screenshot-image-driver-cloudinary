@@ -6,6 +6,7 @@
 namespace Bex\Behat\ScreenshotExtension\Driver\CloudinaryClient;
 
 use Cloudinary\Uploader;
+use Exception;
 
 class CloudinaryClient implements CloudinaryClientInterface
 {
@@ -17,12 +18,28 @@ class CloudinaryClient implements CloudinaryClientInterface
 
     public function upload($filepath)
     {
-        return Uploader::upload($filepath);
+        try {
+            $response = Uploader::upload($filepath);
+            $response['success'] = true;
+        } catch (Exception $e) {
+            $response['success'] = false;
+            $response['failureReason'] = $e->getMessage();
+        }
+
+        return $response;
     }
 
     public function uploadUnsigned($filepath)
     {
-        return Uploader::unsigned_upload($filepath, $this->preset);
+        try {
+            $response = Uploader::unsigned_upload($filepath, $this->preset);
+            $response['success'] = true;
+        } catch (Exception $e) {
+            $response['success'] = false;
+            $response['failureReason'] = $e->getMessage();
+        }
+
+        return $response;
     }
 
     public function configure($values)

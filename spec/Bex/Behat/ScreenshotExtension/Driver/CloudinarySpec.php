@@ -27,7 +27,7 @@ class CloudinarySpec extends ObjectBehavior
         $this->load($container, ['screenshot_directory' => '/tmp/behat-screenshot/', 'cloud_name' => 'X', 'preset' => 'Y']);
 
         $local->upload('imgdata', 'img_file_name.png')->shouldBeCalled()->willReturn('/tmp/behat-screenshot/img_file_name.png');
-        $client->uploadUnsigned('/tmp/behat-screenshot/img_file_name.png')->shouldBeCalled()->willReturn(['secure_url' => 'cloudinary']);
+        $client->uploadUnsigned('/tmp/behat-screenshot/img_file_name.png')->shouldBeCalled()->willReturn(['success' => true, 'secure_url' => 'cloudinary']);
 
         $this->upload('imgdata', 'img_file_name.png')->shouldReturn('cloudinary');
     }
@@ -37,7 +37,7 @@ class CloudinarySpec extends ObjectBehavior
         $this->load($container, ['screenshot_directory' => '/tmp/behat-screenshot/']);
 
         $local->upload('imgdata', 'img_file_name.png')->shouldBeCalled()->willReturn('/tmp/behat-screenshot/img_file_name.png');
-        $client->upload('/tmp/behat-screenshot/img_file_name.png')->shouldBeCalled()->willReturn(['secure_url' => 'cloudinary']);
+        $client->upload('/tmp/behat-screenshot/img_file_name.png')->shouldBeCalled()->willReturn(['success' => true, 'secure_url' => 'cloudinary']);
 
         $this->upload('imgdata', 'img_file_name.png')->shouldReturn('cloudinary');
     }
