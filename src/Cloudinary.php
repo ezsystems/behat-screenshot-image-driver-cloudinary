@@ -80,6 +80,6 @@ class Cloudinary implements ImageDriverInterface
      */
     private function processResponse($response)
     {
-        return $response['secure_url'];
+        return $response['success'] ? $response['secure_url'] : sprintf('Failure: %s', $response['failureReason']);
     }
 }
