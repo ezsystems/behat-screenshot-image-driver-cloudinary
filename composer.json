@@ -8,10 +8,11 @@
     "require": {
         "php" : ">=5.6",
         "behat/behat" : "^3.0.0",
-        "cloudinary/cloudinary_php": "^1.10"
+        "cloudinary/cloudinary_php": "^1.10",
+        "ondram/ci-detector": "^2.1.0"
     },
     "require-dev": {
-        "phpspec/phpspec" : "2.4.0-alpha2",
+        "phpspec/phpspec" : "^2.4.0",
         "bex/behat-extension-driver-locator": "*",
         "bex/behat-screenshot": "*",
         "bex/behat-test-runner": "*",

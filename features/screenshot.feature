@@ -58,7 +58,7 @@ Feature: Taking screenshot
       }
       """
 
-  Scenario: Save screenshot using Cloudinary unsigned api
+  Scenario: Save screenshot using Cloudinary unsigned api with default config
     Given I have the configuration:
       """
       default:
@@ -78,6 +78,33 @@ Feature: Taking screenshot
                   screenshot_directory: /tmp/behat-screenshot/
                   cloud_name: ezplatformtravis
                   preset: driver
+      """
+    When I run Behat
+    Then I should see a failing test
+    And I should see the cloudinary image url
+
+  Scenario: Save screenshot using Cloudinary unsigned api with limit and normal mode
+    Given I have the configuration:
+      """
+      default:
+        extensions:
+          Behat\MinkExtension:
+            base_url: 'http://localhost:8080'
+            sessions:
+              default:
+                selenium2:
+                  wd_host: http://0.0.0.0:4444/wd/hub
+                  browser: chrome
+
+          Bex\Behat\ScreenshotExtension:
+            active_image_drivers: cloudinary
+            image_drivers:
+                cloudinary:
+                  screenshot_directory: /tmp/behat-screenshot/
+                  cloud_name: ezplatformtravis
+                  preset: driver
+                  mode: normal
+                  limit: 3
       """
     When I run Behat
     Then I should see a failing test
