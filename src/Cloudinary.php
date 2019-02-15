@@ -13,6 +13,8 @@ use Bex\Behat\ScreenshotExtension\Driver\Constraint\ConstraintList;
 use Bex\Behat\ScreenshotExtension\Driver\Constraint\LimitConstraint;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\Filesystem\Filesystem;
 
 class Cloudinary implements ImageDriverInterface
 {
@@ -83,11 +85,13 @@ class Cloudinary implements ImageDriverInterface
     public function load(ContainerBuilder $container, array $config)
     {
         $this->localDriver->load($container, $config);
+
         $this->screenshotDirectory = str_replace(
             '%paths.base%',
             $container->getParameter('paths.base'),
             $config[Local::CONFIG_PARAM_SCREENSHOT_DIRECTORY]
         );
+        $this->ensureDirectoryExists($this->screenshotDirectory);
 
         $this->constraints = new ConstraintList();
         if (CiConstraint::MODE_NAME === $config[SELF::CONFIG_PARAM_MODE]) {
@@ -119,5 +123,17 @@ class Cloudinary implements ImageDriverInterface
     private function randomizeFilename($filename)
     {
         return sprintf('%s-%s', str_replace('.', '', uniqid('', true)), $filename);
+    }
+
+    private function ensureDirectoryExists($directory)
+    {
+        try {
+            $fs = new Filesystem();
+            if (!$fs->exists($directory)) {
+                $fs->mkdir($directory, 0770);
+            }
+        } catch (IOException $e) {
+            throw new \RuntimeException(sprintf('Cannot create screenshot directory: %s', $directory));
+        }
     }
 }
