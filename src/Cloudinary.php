@@ -15,6 +15,8 @@ use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use Yandex\Allure\Adapter\Allure;
+use Yandex\Allure\Adapter\Event\AddAttachmentEvent;
 
 class Cloudinary implements ImageDriverInterface
 {
@@ -58,6 +60,10 @@ class Cloudinary implements ImageDriverInterface
         }
 
         $filepath = $this->localDriver->upload($binaryImage, $filename);
+
+        if (class_exists( 'Yandex\Allure\Adapter\Allure')) {
+            Allure::lifecycle()->fire(new AddAttachmentEvent($filepath, 'Browser screenshot'));
+        }
 
         if ($this->isUnsignedUpload) {
             $response = $this->cloudinaryClient->uploadUnsigned($filepath);
