@@ -1,6 +1,0 @@
-default:
-  suites:
-    default:
-      contexts:
-        - Bex\Behat\Context\TestRunnerContext
-        - FeatureContext

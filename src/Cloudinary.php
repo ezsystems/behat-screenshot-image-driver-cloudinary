@@ -1,15 +1,14 @@
 <?php
+
 /**
- * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) Ibexa AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
  */
 namespace Bex\Behat\ScreenshotExtension\Driver;
 
 use Bex\Behat\ScreenshotExtension\Driver\CloudinaryClient\CloudinaryClient;
 use Bex\Behat\ScreenshotExtension\Driver\CloudinaryClient\CloudinaryClientInterface;
-use Bex\Behat\ScreenshotExtension\Driver\Constraint\CiConstraint;
 use Bex\Behat\ScreenshotExtension\Driver\Constraint\Constraint;
-use Bex\Behat\ScreenshotExtension\Driver\Constraint\ConstraintList;
 use Bex\Behat\ScreenshotExtension\Driver\Constraint\LimitConstraint;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -20,10 +19,9 @@ class Cloudinary implements ImageDriverInterface
 {
     const CONFIG_PARAM_PRESET = 'preset';
     const CONFIG_PARAM_CLOUD_NAME = 'cloud_name';
-    const CONFIG_PARAM_MODE = 'mode';
     const CONFIG_PARAM_LIMIT = 'limit';
 
-    /** @var CloudinaryClientInterface */
+    /** @var \Bex\Behat\ScreenshotExtension\Driver\CloudinaryClient\CloudinaryClientInterface */
     private $cloudinaryClient;
 
     /** @var ImageDriverInterface */
@@ -32,7 +30,7 @@ class Cloudinary implements ImageDriverInterface
     /** @var bool */
     private $isUnsignedUpload;
 
-    /** @var Constraint[] */
+    /** @var \Bex\Behat\ScreenshotExtension\Driver\Constraint\Constraint */
     private $constraints;
 
     private $screenshotDirectory;
@@ -53,7 +51,7 @@ class Cloudinary implements ImageDriverInterface
     {
         $filename = $this->randomizeFilename($filename);
 
-        if (!$this->constraints->canUpload()) {
+        if ($this->constraints && !$this->constraints->canUpload()) {
             return $this->constraints->getReason();
         }
 
@@ -76,7 +74,7 @@ class Cloudinary implements ImageDriverInterface
             ->children()
                 ->variableNode(self::CONFIG_PARAM_CLOUD_NAME)->end()
                 ->variableNode(self::CONFIG_PARAM_PRESET)->end()
-                ->scalarNode('mode')->defaultValue('normal')->end()
+                ->scalarNode('mode')->defaultValue('')->end()
                 ->integerNode('limit')->defaultValue(-1)->end()
                 ->end()
             ->end();
@@ -93,13 +91,8 @@ class Cloudinary implements ImageDriverInterface
         );
         $this->ensureDirectoryExists($this->screenshotDirectory);
 
-        $this->constraints = new ConstraintList();
-        if (CiConstraint::MODE_NAME === $config[SELF::CONFIG_PARAM_MODE]) {
-            $this->constraints->add(new CiConstraint());
-        }
-
-        if ($config[SELF::CONFIG_PARAM_LIMIT] >= 0) {
-            $this->constraints->add(new LimitConstraint($config[SELF::CONFIG_PARAM_LIMIT], $this->screenshotDirectory));
+        if ($config[self::CONFIG_PARAM_LIMIT] >= 0) {
+            $this->constraints = $this->createConstraints($config);
         }
 
         $this->isUnsignedUpload = array_key_exists(self::CONFIG_PARAM_PRESET, $config);
@@ -135,5 +128,10 @@ class Cloudinary implements ImageDriverInterface
         } catch (IOException $e) {
             throw new \RuntimeException(sprintf('Cannot create screenshot directory: %s', $directory));
         }
+    }
+
+    private function createConstraints($config): Constraint
+    {
+        return new LimitConstraint($config[self::CONFIG_PARAM_LIMIT], $this->screenshotDirectory);
     }
 }
