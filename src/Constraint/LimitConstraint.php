@@ -1,6 +1,7 @@
 <?php
+
 /**
- * @copyright Copyright (C) eZ Systems AS. All rights reserved.
+ * @copyright Copyright (C) Ibexa AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
  */
 namespace Bex\Behat\ScreenshotExtension\Driver\Constraint;
@@ -15,6 +16,8 @@ class LimitConstraint implements Constraint
     /** @var string */
     private $savePath;
 
+    private const DISABLE_CONSTRAINT_ENV = 'DISABLE_BEHAT_SCREENSHOT_LIMIT';
+
     public function __construct($limit, $savePath)
     {
         $this->limit = $limit;
@@ -23,6 +26,10 @@ class LimitConstraint implements Constraint
 
     public function canUpload()
     {
+        if (getenv(self::DISABLE_CONSTRAINT_ENV) !== false) {
+            return true;
+        }
+
         return $this->getNumberOfScreenshotsTaken() < $this->limit;
     }
 
